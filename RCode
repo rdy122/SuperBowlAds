@@ -1,0 +1,193 @@
+library(rtweet)
+library(dplyr)
+library(lubridate)
+library(tidytext)
+
+#Access Twitter API
+#Collect Tweets
+
+paramount <- search_tweets(
+  q = "paramount since:2021-02-07",
+  n = 18000,
+  token = token,
+  include_rts = FALSE)
+```
+
+
+```{r}
+snooki <- search_tweets(
+  q = "snooki -paramount since:2021-02-07",
+  n = 18000,
+  token = token,
+  include_rts = FALSE)
+```
+
+```{r}
+doordash <- search_tweets(
+  q = "doordash since:2021-02-07",
+  n = 18000,
+  token = token,
+  include_rts = FALSE)
+```
+
+```{r}
+bigbird <- search_tweets(
+  q = "big bird -doordash since:2021-02-07",
+  n = 18000,
+  token = token,
+  include_rts = FALSE)
+```
+
+```{r}
+doritos <- search_tweets(
+  q = "doritos since:2021-02-07",
+  token = token,
+  include_rts = FALSE,
+  retryonratelimit = TRUE
+  )
+```
+
+```{r}
+statefarm <- search_tweets(
+  q = "state farm since:2021-02-07",
+  n = 18000,
+  token = token,
+  include_rts = FALSE,
+  retryonratelimit = TRUE)
+```
+
+```{r}
+oatly1 <- search_tweets(
+  q = "oatly",
+  n = 18000,
+  token = token,
+  include_rts = FALSE)
+```
+
+```{r}
+toyota <- search_tweets(
+  q = "toyota since:2021-02-07",
+  n = 18000,
+  token = token,
+  include_rts = FALSE)
+```
+
+```{r}
+tide <- search_tweets(
+  q = "tide since:2021-02-07",
+  n = 18000,
+  token = token,
+  include_rts = FALSE)
+```
+
+```{r}
+jalexander <- search_tweets(
+  q = "jason alexander -tide since:2021-02-07",
+  n = 18000,
+  token = token,
+  include_rts = FALSE)
+```
+
+```{r}
+vroom <- search_tweets(
+  q = "vroom since:2021-02-07",
+  n = 18000,
+  token = token,
+  include_rts = FALSE)
+```
+
+```{r}
+JimmyJohns <- search_tweets(
+  q = "jimmy johns since:2021-02-07",
+  n = 18000,
+  token = token,
+  include_rts = FALSE)
+```
+
+```{r}
+tmobile <- search_tweets(
+  q = "tmobile since:2021-02-07",
+  n = 18000,
+  token = token,
+  include_rts = FALSE,
+  retryonratelimit = TRUE)
+```
+
+```{r}
+UberEats <- search_tweets(
+  q = "Uber Eats since:2021-02-07",
+  n = 18000,
+  token = token,
+  include_rts = FALSE,
+  retryonratelimit = TRUE)
+```
+
+
+```{r}
+fiverr <- search_tweets(
+  q = "fiverr -gig since:2021-02-07",
+  n = 18000,
+  token = token,
+  include_rts = FALSE)
+```
+
+```{r}
+bigbird <- bigbird %>% mutate(phrase = "Big Bird")
+doordash <- doordash %>% mutate(phrase = "DoorDash")
+doritos <- doritos %>% mutate(phrase = "Doritos")
+fiverr <- fiverr %>% mutate(phrase = "Fiverr")
+jalexander <- jalexander %>% mutate(phrase = "Jason Alexander")
+JimmyJohns <- JimmyJohns %>% mutate(phrase = "Jimmy Johns")
+oatly <- oatly %>% mutate(phrase = "Oatly")
+paramount <- paramount %>% mutate(phrase = "Paramount")
+snooki <- snooki %>% mutate(phrase = "Snooki")
+statefarm <- statefarm %>% mutate(phrase = "State Farm")
+tide <- tide %>% mutate(phrase = "Tide")
+tmobile <- tmobile %>% mutate(phrase = "TMobile")
+toyota <- toyota %>% mutate(phrase = "Toyota")
+UberEats <- UberEats %>% mutate(phrase = "Uber Eats")
+vroom <- vroom %>% mutate(phrase = "Vroom")
+
+```
+
+```{r}
+SBtweets<-rbind(bigbird, doordash, doritos, fiverr, jalexander, JimmyJohns, oatly, paramount, snooki, statefarm, tide, tmobile, toyota, UberEats, vroom)
+```
+
+```{r}
+Sys.setlocale("LC_TIME", "English")
+SBtweets$created_at <- as_datetime(as.POSIXct(SBtweets$created_at, "Y-%m-%d %H:%M%OS"), tz = "EST")
+```
+
+```{r}
+SBtweets2 <- SBtweets %>% select(created_at, screen_name, text, source, is_retweet, favorite_count, retweet_count, hashtags, location, followers_count, phrase)
+SBtweets_final <- data.frame(lapply(SBtweets2, as.character), stringsAsFactors = FALSE)
+```
+
+```{r}
+write.csv(SBtweets_final, "C:/Users.../SBtweets.csv")
+```
+
+```{r}
+SBtweets3 <- SBtweets_final
+SBtweets3$text <-  gsub("https\\S*", "", SBtweets3$text)
+SBtweets3$text <-  gsub("@\\S*", "", SBtweets3$text) 
+SBtweets3$text  <-  gsub("amp", "", SBtweets3$text) 
+SBtweets3$text  <-  gsub("[\r\n]", "", SBtweets3$text)
+SBtweets3$text  <-  gsub("[[:punct:]]", "", SBtweets3$text)
+SBtweets3$text <- gsub("paramount", "", SBtweets3$text, ignore.case = TRUE)
+SB_words <- SBtweets3 %>%
+  select(text, created_at, phrase) %>%
+  unnest_tokens(word, text)
+SB_words <- SB_words %>%
+  anti_join(stop_words)
+```
+
+```{r}
+sentiment_dataset <- get_sentiments("afinn")
+SB_afinn<- merge(SB_words, sentiment_dataset, by = 'word')
+```
+
+```{r}
+write.csv(SB_afinn, "C:/Users...SB_sentiment.csv")
+```
